@@ -183,7 +183,7 @@ namespace Memory_Policy_Simulator
                 }
                 count[i]++;
                 newPage.loc = i + 1;
-
+                
             }
             else
             {   //hit가 아닐 경우
