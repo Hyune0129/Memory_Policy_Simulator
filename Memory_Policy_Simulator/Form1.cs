@@ -31,8 +31,10 @@ namespace Memory_Policy_Simulator
         private void DrawBase(Core core, int windowSize, int dataLength)
         {
             /* parse window */
-            var psudoQueue = new Queue<char>();
-
+            string policy = comboBox1.GetItemText(comboBox1.SelectedItem);
+            var psudoList = new List<char>();
+            List<int> value = new List<int>(); //age, count를 위한 List
+            int max, min, temp,index=0;
             g.Clear(Color.Black);
 
             for ( int i = 0; i < dataLength; i++ ) // length
@@ -40,16 +42,47 @@ namespace Memory_Policy_Simulator
                 int psudoCursor = core.pageHistory[i].loc;
                 char data = core.pageHistory[i].data;
                 Page.STATUS status = core.pageHistory[i].status;
+                if ( status == Page.STATUS.PAGEFAULT)
+                {   /*page fault*/
+                    psudoList.Add(data);
+                    value.Add(0);
+                    break;
+                }
+                else if( status == Page.STATUS.MIGRATION)
+                {   /*migration*/
+                    switch(policy)
+                    {
+                        case "LRU":
+                            max = -1;
+                            for(int j=0; j<psudoList.Count; j++)
+                            {
+                                temp = value.ElementAt(j);
+                                if(temp > max)
+                                {
+                                    max = temp;
+                                    index = j;
+                                }
+                            }
+                            psudoList.RemoveAt(index);
+                            psudoList.Add(data);
+                            break;
+                        case "LFU":
 
-                switch ( status )
+                            break;
+                        case "MFU":
+
+                            break;
+                        default:    //FIFO
+                            psudoList.RemoveAt(0);
+                            psudoList.Add(data);
+                            break;
+                    }
+                        
+                        
+                }
+                else if( status == Page.STATUS.HIT && (policy == "LFU"|| policy == "MFU"))
                 {
-                    case Page.STATUS.PAGEFAULT:
-                        psudoQueue.Enqueue(data);
-                        break;
-                    case Page.STATUS.MIGRATION:
-                        psudoQueue.Dequeue();
-                        psudoQueue.Enqueue(data);
-                        break;
+                    value;
                 }
 
                 for ( int j = 0; j <= windowSize; j++) // height - STEP
@@ -67,9 +100,21 @@ namespace Memory_Policy_Simulator
                 DrawGridHighlight(i, psudoCursor, status);
                 int depth = 1;
 
-                foreach ( char t in psudoQueue )
+                foreach ( char t in psudoList)
                 {
                     DrawGridText(i, depth++, t);
+                }
+                switch(policy)
+                {
+                    case "LRU":
+                        for (int j = 0; j < value.Count; j++)
+                            value[j]++;
+                        break;
+                    case "LFU":
+
+                        break;
+                    case "MFU":
+                        break;
                 }
             }
         }
@@ -140,12 +185,12 @@ namespace Memory_Policy_Simulator
             this.tbConsole.Clear();
 
             if (this.tbQueryString.Text != "" || this.tbWindowSize.Text != "")
-            {   
+            {
                 string data = this.tbQueryString.Text;              //Reference String
                 int windowSize = int.Parse(this.tbWindowSize.Text); //#Frame
-
+                string select = comboBox1.GetItemText(comboBox1.SelectedItem);  //선택한 Policy
                 /* initalize */
-                var window = new Core(windowSize);
+                var window = new Core(windowSize, select);
 
                 foreach ( char element in data )
                 {

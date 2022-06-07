@@ -14,9 +14,8 @@ namespace Memory_Policy_Simulator
         {
             HIT,
             PAGEFAULT,
-            MIGRATION
+            MIGRATION   
         }
-
         public int pid;
         public int loc;
         public char data;
