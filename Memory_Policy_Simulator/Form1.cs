@@ -34,7 +34,7 @@ namespace Memory_Policy_Simulator
             string policy = comboBox1.GetItemText(comboBox1.SelectedItem);
             var psudoList = new List<char>();
             List<int> value = new List<int>(); //age, count를 위한 List
-            int max, min, temp,index=0;
+            int max = -1, min = int.MaxValue, temp,index=0;
             g.Clear(Color.Black);
 
             for ( int i = 0; i < dataLength; i++ ) // length
@@ -42,47 +42,84 @@ namespace Memory_Policy_Simulator
                 int psudoCursor = core.pageHistory[i].loc;
                 char data = core.pageHistory[i].data;
                 Page.STATUS status = core.pageHistory[i].status;
-                if ( status == Page.STATUS.PAGEFAULT)
-                {   /*page fault*/
+                if (status == Page.STATUS.PAGEFAULT)
+                {
                     psudoList.Add(data);
                     value.Add(0);
-                    break;
                 }
-                else if( status == Page.STATUS.MIGRATION)
-                {   /*migration*/
-                    switch(policy)
+                else if (status == Page.STATUS.MIGRATION)
+                {
+                    switch (policy)
                     {
                         case "LRU":
-                            max = -1;
-                            for(int j=0; j<psudoList.Count; j++)
+                            for (int j = 0; j < value.Count; j++)
                             {
-                                temp = value.ElementAt(j);
-                                if(temp > max)
+                                temp = value[j];
+                                if (temp > max)
                                 {
-                                    max = temp;
                                     index = j;
+                                    max = temp;
                                 }
                             }
+                            value.RemoveAt(index);
                             psudoList.RemoveAt(index);
                             psudoList.Add(data);
                             break;
                         case "LFU":
-
+                            for (int j = 0; j < value.Count; j++)
+                            {
+                                temp = value[j];
+                                if (temp > max)
+                                {
+                                    index = j;
+                                    max = temp;
+                                }
+                            }
+                            value.RemoveAt(index);
+                            psudoList.RemoveAt(index);
+                            psudoList.Add(data);
                             break;
                         case "MFU":
-
+                            for (int j = 0; j < value.Count; j++)
+                            {
+                                temp = value[j];
+                                if (temp < min)
+                                {
+                                    index = j;
+                                    min = temp;
+                                }
+                            }
+                            value.RemoveAt(index);
+                            psudoList.RemoveAt(index);
+                            psudoList.Add(data);
                             break;
                         default:    //FIFO
                             psudoList.RemoveAt(0);
                             psudoList.Add(data);
                             break;
                     }
-                        
-                        
                 }
-                else if( status == Page.STATUS.HIT && (policy == "LFU"|| policy == "MFU"))
+
+                else if (status == Page.STATUS.HIT && (policy == "LFU" || policy == "MFU"))
+
                 {
-                    value;
+
+                    for (int j = 0; j < psudoList.Count; j++)
+
+                    {
+
+                        if (data == psudoList.ElementAt(j))
+
+                        {
+
+                            value[j]++;
+
+                            break;
+
+                        }
+
+                    }
+
                 }
 
                 for ( int j = 0; j <= windowSize; j++) // height - STEP
