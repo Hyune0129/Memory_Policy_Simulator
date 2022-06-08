@@ -34,7 +34,7 @@ namespace Memory_Policy_Simulator
             string policy = comboBox1.GetItemText(comboBox1.SelectedItem);
             var psudoList = new List<char>();
             List<int> value = new List<int>(); //age, count를 위한 List
-            int max = -1, min = int.MaxValue, temp,index=0;
+            int max, min = int.MaxValue, temp,index;
             g.Clear(Color.Black);
 
             for ( int i = 0; i < dataLength; i++ ) // length
@@ -52,6 +52,7 @@ namespace Memory_Policy_Simulator
                     switch (policy)
                     {
                         case "LRU":
+                            max = -1; index = 0;
                             for (int j = 0; j < value.Count; j++)
                             {
                                 temp = value[j];
@@ -64,22 +65,10 @@ namespace Memory_Policy_Simulator
                             value.RemoveAt(index);
                             psudoList.RemoveAt(index);
                             psudoList.Add(data);
+                            value.Add(0);
                             break;
                         case "LFU":
-                            for (int j = 0; j < value.Count; j++)
-                            {
-                                temp = value[j];
-                                if (temp > max)
-                                {
-                                    index = j;
-                                    max = temp;
-                                }
-                            }
-                            value.RemoveAt(index);
-                            psudoList.RemoveAt(index);
-                            psudoList.Add(data);
-                            break;
-                        case "MFU":
+                            min = int.MaxValue; index = 0;
                             for (int j = 0; j < value.Count; j++)
                             {
                                 temp = value[j];
@@ -92,6 +81,23 @@ namespace Memory_Policy_Simulator
                             value.RemoveAt(index);
                             psudoList.RemoveAt(index);
                             psudoList.Add(data);
+                            value.Add(0);
+                            break;
+                        case "MFU":
+                            max = -1; index = 0;
+                            for (int j = 0; j < value.Count; j++)
+                            {
+                                temp = value[j];
+                                if (temp > max)
+                                {
+                                    index = j;
+                                    max = temp;
+                                }
+                            }
+                            value.RemoveAt(index);
+                            psudoList.RemoveAt(index);
+                            value.Add(0);
+                            psudoList.Add(data);
                             break;
                         default:    //FIFO
                             psudoList.RemoveAt(0);
@@ -99,27 +105,24 @@ namespace Memory_Policy_Simulator
                             break;
                     }
                 }
-
-                else if (status == Page.STATUS.HIT && (policy == "LFU" || policy == "MFU"))
-
+                else if (status == Page.STATUS.HIT && policy != "FIFO")
                 {
 
                     for (int j = 0; j < psudoList.Count; j++)
-
                     {
-
                         if (data == psudoList.ElementAt(j))
-
                         {
-
-                            value[j]++;
-
-                            break;
-
+                            if (policy == "LRU")
+                            {
+                                value[j] = 0;
+                            }
+                            else
+                            {
+                                value[j]++;
+                                break;
+                            }
                         }
-
                     }
-
                 }
 
                 for ( int j = 0; j <= windowSize; j++) // height - STEP
@@ -133,25 +136,16 @@ namespace Memory_Policy_Simulator
                         DrawGrid(i, j);
                     }
                 }
-
                 DrawGridHighlight(i, psudoCursor, status);
                 int depth = 1;
-
                 foreach ( char t in psudoList)
                 {
                     DrawGridText(i, depth++, t);
                 }
-                switch(policy)
-                {
-                    case "LRU":
-                        for (int j = 0; j < value.Count; j++)
-                            value[j]++;
-                        break;
-                    case "LFU":
-
-                        break;
-                    case "MFU":
-                        break;
+                if(policy == "LRU") //age 추가
+                {                        
+                    for (int j = 0; j < value.Count; j++) 
+                        value[j]++;
                 }
             }
         }
